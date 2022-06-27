@@ -119,15 +119,7 @@ public class DetailActivity extends AppCompatActivity {
 
                     ((TextView) findViewById(R.id.id)).setText("ID: #" + job.getId());
                     ((TextView) findViewById(R.id.title)).setText(job.getTitle());
-                    ((TextView) findViewById(R.id.company)).setText(job.getCompany());
-                    ((TextView) findViewById(R.id.location)).setText(job.getLocation());
                     ((TextView) findViewById(R.id.type)).setText(job.getType());
-                    ((TextView) findViewById(R.id.title2)).setText(job.getTitle());
-                    ((TextView) findViewById(R.id.description)).setText(Html.fromHtml(job.getDescription()));
-                    ((TextView) findViewById(R.id.howToApply)).setText(Html.fromHtml(job.getHow_to_apply()));
-
-                    ((TextView) findViewById(R.id.description)).setMovementMethod(LinkMovementMethod.getInstance());
-                    ((TextView) findViewById(R.id.howToApply)).setMovementMethod(LinkMovementMethod.getInstance());
 
                 } else {
                     constraintLayout.setVisibility(View.GONE);
