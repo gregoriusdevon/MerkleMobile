@@ -24,7 +24,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:id="@+id/company"
+                android:id="@+id/date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -40,7 +40,7 @@
         </com.github.captain_miao.optroundcardview.OptRoundCardView>
 
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/id"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -55,7 +55,7 @@
             app:layout_constraintTop_toBottomOf="@+id/optRoundCardView" />
 
         <TextView
-            android:id="@+id/location"
+            android:id="@+id/userId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="marquee"
@@ -64,8 +64,8 @@
             android:text=""
             android:textColor="@color/red500"
             android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@+id/title"
-            app:layout_constraintTop_toBottomOf="@+id/title" />
+            app:layout_constraintStart_toStartOf="@+id/id"
+            app:layout_constraintTop_toBottomOf="@+id/id" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

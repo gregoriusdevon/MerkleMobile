@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:fontFamily="@font/inter_bold"
-        android:text="JobList."
+        android:text="MerkleMobile"
         android:textColor="@color/red500"
         android:textSize="36sp"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.JobList" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.Merkle" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/red500</item>
         <item name="colorPrimaryVariant">@color/red300</item>

@@ -2,9 +2,12 @@ package com.merkle.UI.Landing;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,161 +16,52 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.airbnb.lottie.LottieAnimationView;
-import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.login.LoginManager;
-import com.facebook.login.LoginResult;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FacebookAuthProvider;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.android.material.textfield.TextInputLayout;
+import com.merkle.DB.ApiEndPoints;
+import com.merkle.Data.Model.Users.User;
 import com.merkle.R;
 import com.merkle.UI.Main.HomeActivity;
 
-import java.util.Arrays;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import static com.merkle.DB.baseURL.url;
 
 public class LoginActivity extends AppCompatActivity {
+    private ApiEndPoints api;
+    private SharedPreferences sharedprefs;
+    private EditText editUsername, editPassword;
     private LottieAnimationView loadingProgress;
     private boolean doubleBackToExitPressedOnce = false;
-
-    private FirebaseAuth mAuth;
-    private CallbackManager mCallbackManager;
-
-    private GoogleSignInClient mSignInClient;
-    private static final int RC_SIGN_IN = 1234;
-    private static final String TAG = "FirebaseLogin";
+    private TextInputLayout textInputLayout, textInputLayout2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        sharedprefs = getSharedPreferences("myprefs", Context.MODE_PRIVATE);
 
-        loadingProgress = findViewById(R.id.loadingProgress);
-        MaterialButton loginGoogle = findViewById(R.id.loginGoogle);
-        MaterialButton loginFacebook = findViewById(R.id.loginFacebook);
-
-        mCallbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                Log.d(TAG, "facebook:onSuccess:" + loginResult);
-                handleFacebookAccessToken(loginResult.getAccessToken());
-
-                loadingProgress.playAnimation();
-                loadingProgress.setVisibility(LottieAnimationView.VISIBLE);
-                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            }
-
-            @Override
-            public void onCancel() {
-                Log.d(TAG, "facebook:onCancel");
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-
-            }
-        });
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        mSignInClient = GoogleSignIn.getClient(this, gso);
-        loginGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent signInIntent = mSignInClient.getSignInIntent();
-                startActivityForResult(signInIntent, RC_SIGN_IN);
+        api = retrofit.create(ApiEndPoints.class);
 
-                loadingProgress.playAnimation();
-                loadingProgress.setVisibility(LottieAnimationView.VISIBLE);
-                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            }
-        });
+        editUsername = findViewById(R.id.username);
+        editPassword = findViewById(R.id.password);
+        MaterialButton masuk = findViewById(R.id.masuk);
+        textInputLayout = findViewById(R.id.textInputLayout);
+        loadingProgress = findViewById(R.id.loadingProgress);
+        textInputLayout2 = findViewById(R.id.textInputLayout2);
 
-        mAuth = FirebaseAuth.getInstance();
-        loginFacebook.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("email", "public_profile"));
-            }
-        });
-    }
-
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential).addOnSuccessListener(this, authResult -> {
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-            finish();
-        }).addOnFailureListener(this, e -> Toast.makeText(LoginActivity.this, "Authentication failed.",
-                Toast.LENGTH_SHORT).show());
-    }
-
-    private void handleFacebookAccessToken(AccessToken token) {
-        Log.d(TAG, "handleFacebookAccessToken:" + token);
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                loadingProgress.pauseAnimation();
-                loadingProgress.setVisibility(LottieAnimationView.GONE);
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-
-                if (task.isSuccessful()) {
-                    startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                    finish();
-
-                } else {
-                    Log.w(TAG, "signInWithCredential:failure", task.getException());
-                    Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mCallbackManager.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                firebaseAuthWithGoogle(account);
-            } catch (ApiException e) {
-                loadingProgress.pauseAnimation();
-                loadingProgress.setVisibility(LottieAnimationView.GONE);
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-
-                Log.w(TAG, "Google sign in failed", e);
-            }
-        }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (AccessToken.getCurrentAccessToken() != null | GoogleSignIn.getLastSignedInAccount(LoginActivity.this) != null) {
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-            finish();
-        }
+        masuk.setOnClickListener(v -> validateForm(editUsername.getText().toString().trim(), editPassword.getText().toString().trim()));
     }
 
     @Override
@@ -201,5 +95,90 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         return super.dispatchTouchEvent(event);
+    }
+
+    private void validateForm(String username, String password) {
+        if (username.isEmpty()) {
+            textInputLayout.setErrorEnabled(true);
+            textInputLayout.setError("Username salah");
+            editUsername.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    textInputLayout.setErrorEnabled(false);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            });
+
+        } else if (password.isEmpty()) {
+            textInputLayout2.setErrorEnabled(true);
+            textInputLayout2.setError("Password kosong/salah");
+            editPassword.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    textInputLayout2.setErrorEnabled(false);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            });
+
+        } else {
+            login(username, password);
+
+            loadingProgress.playAnimation();
+            loadingProgress.setVisibility(LottieAnimationView.VISIBLE);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        }
+    }
+
+    private void login(String username, String password) {
+        Call<User> call = api.login(username, password);
+        call.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                User user = response.body();
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (user != null) {
+                            Log.e("DEBUG", "TOKEN=" + user.getToken());
+                            sharedprefs.edit().putString("username", username).apply();
+                            sharedprefs.edit().putString("password", password).apply();
+
+                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                            startActivity(intent);
+
+                        } else {
+                            loadingProgress.pauseAnimation();
+                            loadingProgress.setVisibility(LottieAnimationView.GONE);
+                            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                            Toast.makeText(LoginActivity.this, "Username atau Password salah, silahkan coba lagi...", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, 2000);
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                loadingProgress.pauseAnimation();
+                loadingProgress.setVisibility(LottieAnimationView.GONE);
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                Toast.makeText(LoginActivity.this, "Gagal koneksi sistem, silahkan coba lagi...", Toast.LENGTH_LONG).show();
+                Log.e("DEBUG", "Error: ", t);
+            }
+        });
     }
 }

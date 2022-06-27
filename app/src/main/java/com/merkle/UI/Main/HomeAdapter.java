@@ -12,18 +12,18 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.merkle.Data.Helper.Utils;
-import com.merkle.Data.Model.Job;
+import com.merkle.Data.Model.Carts.Cart;
 import com.merkle.R;
 
 import java.util.List;
 
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     private final Context context;
-    private final List<Job> listJob;
+    private final List<Cart> cartList;
 
-    public HomeAdapter(Context context, List<Job> job) {
+    public HomeAdapter(Context context, List<Cart> carts) {
         this.context = context;
-        this.listJob = job;
+        this.cartList = carts;
     }
 
     @NonNull
@@ -35,16 +35,16 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Job job = listJob.get(position);
+        Cart cart = cartList.get(position);
 
-        holder.tvCompany.setText(job.getCompany());
-        holder.tvTitle.setText(job.getTitle());
-        holder.tvLocation.setText(job.getLocation());
+        holder.tvDate.setText(cart.getDate());
+        holder.tvId.setText("ID #" + String.valueOf(cart.getId()));
+        holder.tvUserId.setText("UserID #" + String.valueOf(cart.getUserId()));
 
         holder.constraintLayout.setOnClickListener(v -> {
             Utils.preventTwoClick(v);
             Intent intent = new Intent(context, DetailActivity.class);
-            intent.putExtra("id", job.getId());
+            intent.putExtra("id", cart.getId());
             context.startActivity(intent);
         });
     }
@@ -61,18 +61,18 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return listJob.size();
+        return cartList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout constraintLayout;
-        TextView tvCompany, tvTitle, tvLocation;
+        TextView tvDate, tvId, tvUserId;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            tvCompany = itemView.findViewById(R.id.company);
-            tvTitle = itemView.findViewById(R.id.title);
-            tvLocation = itemView.findViewById(R.id.location);
+            tvDate = itemView.findViewById(R.id.date);
+            tvId = itemView.findViewById(R.id.id);
+            tvUserId = itemView.findViewById(R.id.userId);
             constraintLayout = itemView.findViewById(R.id.constraintLayout);
         }
     }
