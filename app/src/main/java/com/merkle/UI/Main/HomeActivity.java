@@ -57,8 +57,7 @@ import static com.merkle.DB.baseURL.url;
 
 public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnItemSelectedListener {
     private static final int POS_CART = 0;
-    private static final int POS_USERS = 1;
-    private static final int POS_LOGOUT = 2;
+    private static final int POS_LOGOUT = 1;
 
     private ApiEndPoints api;
     private HomeAdapter adapter;
@@ -164,7 +163,6 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
 
         DrawerAdapter adapter = new DrawerAdapter(Arrays.asList(
                 createItemFor(POS_CART).setChecked(true),
-                createItemFor(POS_USERS),
                 createItemFor(POS_LOGOUT)));
         adapter.setListener(this);
         adapter.setSelected(POS_CART);
@@ -186,7 +184,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        getMenuInflater().inflate(R.menu.menu_home, menu);
         return true;
     }
 

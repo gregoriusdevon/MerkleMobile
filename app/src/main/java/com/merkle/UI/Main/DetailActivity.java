@@ -85,7 +85,7 @@ public class DetailActivity extends AppCompatActivity {
             Utils.preventTwoClick(v);
             PopupMenu popup = new PopupMenu(this, v, Gravity.END, R.attr.popupMenuStyle, 0);
             MenuInflater inflater = popup.getMenuInflater();
-            inflater.inflate(R.menu.menu_toolbar, popup.getMenu());
+            inflater.inflate(R.menu.menu_detail, popup.getMenu());
 
             popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -138,7 +138,7 @@ public class DetailActivity extends AppCompatActivity {
 
                     ((TextView) findViewById(R.id.id)).setText("ID #" + carts.getId());
                     ((TextView) findViewById(R.id.userId)).setText("#" + carts.getUserId());
-                    ((TextView) findViewById(R.id.date)).setText("#" + carts.getDate());
+                    ((TextView) findViewById(R.id.date)).setText(carts.getDate());
 
                     adapter = new DetailAdapter(DetailActivity.this, carts.getProducts());
                     recyclerView.setAdapter(adapter);
