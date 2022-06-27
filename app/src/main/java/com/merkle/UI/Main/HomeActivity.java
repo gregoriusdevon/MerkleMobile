@@ -64,6 +64,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
     private String[] screenTitles;
     private Drawable[] screenIcons;
     private RecyclerView recyclerView;
+    private SharedPreferences sharedprefs;
     private SlidingRootNav slidingRootNav;
     private SwipeRefreshLayout swipeRefreshLayout;
     private final List<Cart> carts = new ArrayList<>();
@@ -74,6 +75,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        sharedprefs = getSharedPreferences("myprefs", Context.MODE_PRIVATE);
 
         TextView nama = findViewById(R.id.nama);
         emptyTransaksi = findViewById(R.id.emptyTransaksi);
@@ -176,6 +178,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
     @Override
     public void onItemSelected(int position) {
         if (position == POS_LOGOUT) {
+            sharedprefs.edit().clear().apply();
             Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
