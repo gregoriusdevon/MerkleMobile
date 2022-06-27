@@ -1,15 +1,14 @@
 package com.merkle.UI.Main;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.TypedArray;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,33 +17,24 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.ColorRes;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.merkle.DB.ApiEndPoints;
-import com.merkle.Data.Helper.DrawerAdapter;
-import com.merkle.Data.Helper.DrawerItem;
-import com.merkle.Data.Helper.SimpleItem;
-import com.merkle.Data.Model.Carts.Cart;
+import com.merkle.Data.Helper.Utils;
+import com.merkle.Data.Model.Users.User;
 import com.merkle.R;
-import com.merkle.UI.Landing.LoginActivity;
-import com.yarolegovich.slidingrootnav.SlidingRootNav;
-import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -55,40 +45,31 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.merkle.DB.baseURL.url;
 
-public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnItemSelectedListener {
-    private static final int POS_CART = 0;
-    private static final int POS_LOGOUT = 1;
-
+public class UserActivity extends AppCompatActivity {
     private ApiEndPoints api;
-    private HomeAdapter adapter;
-    private String[] screenTitles;
-    private Drawable[] screenIcons;
+    private UserAdapter adapter;
     private RecyclerView recyclerView;
-    private SlidingRootNav slidingRootNav;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private final List<Cart> carts = new ArrayList<>();
-    private boolean doubleBackToExitPressedOnce = false;
+    private final List<User> users = new ArrayList<>();
     private LottieAnimationView emptyTransaksi, loadingProgress;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_user);
 
-        TextView nama = findViewById(R.id.nama);
+        ImageView back = findViewById(R.id.back);
+        ImageView IvRefresh = findViewById(R.id.refresh);
         emptyTransaksi = findViewById(R.id.emptyTransaksi);
         loadingProgress = findViewById(R.id.loadingProgress);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
 
-        SharedPreferences sharedprefs = getSharedPreferences("myprefs", Context.MODE_PRIVATE);
-        nama.setText(sharedprefs.getString("username", null));
-
         recyclerView = findViewById(R.id.recycler);
-        adapter = new HomeAdapter(this, carts);
+        adapter = new UserAdapter(this, users);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(url)
@@ -103,7 +84,25 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
             }
         });
 
-        SideNavSetup();
+        IvRefresh.setOnClickListener(v -> {
+            Utils.preventTwoClick(v);
+            PopupMenu popup = new PopupMenu(this, v, Gravity.END, R.attr.popupMenuStyle, 0);
+            MenuInflater inflater = popup.getMenuInflater();
+            inflater.inflate(R.menu.menu_detail, popup.getMenu());
+
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    if (item.getItemId() == R.id.action_refresh) {
+                        Refreshing();
+                    }
+                    return true;
+                }
+            });
+            popup.show();
+        });
+
+        back.setOnClickListener(v -> onBackPressed());
     }
 
     @Override
@@ -113,78 +112,24 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
         loadingProgress.playAnimation();
         loadingProgress.setVisibility(LottieAnimationView.VISIBLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        loadCarts(api.readCarts());
+        loadUsers(api.readUsers());
     }
 
     @Override
     public void onBackPressed() {
-        slidingRootNav.openMenu();
-        if (slidingRootNav.isMenuOpened()) {
-            if (doubleBackToExitPressedOnce) {
-                finishAffinity();
-                return;
-            }
-
-            this.doubleBackToExitPressedOnce = true;
-            Toast.makeText(this, "Tekan lagi untuk keluar...", Toast.LENGTH_SHORT).show();
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    doubleBackToExitPressedOnce = false;
-                }
-            }, 2000);
-        }
+        super.onBackPressed();
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     public void Refreshing() {
         swipeRefreshLayout.setRefreshing(true);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        loadCarts(api.readCarts());
-    }
-
-    public void SideNavSetup() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("");
-        setSupportActionBar(toolbar);
-
-        slidingRootNav = new SlidingRootNavBuilder(this)
-                .withToolbarMenuToggle(toolbar)
-                .withMenuOpened(false)
-                .withContentClickableWhenMenuOpened(false)
-                .withMenuLayout(R.layout.activity_sidenav)
-                .withDragDistance(100)
-                .withRootViewScale(0.8f)
-                .withRootViewElevation(5)
-                .inject();
-
-        screenIcons = loadScreenIcons();
-        screenTitles = loadScreenTitles();
-
-        DrawerAdapter adapter = new DrawerAdapter(Arrays.asList(
-                createItemFor(POS_CART).setChecked(true),
-                createItemFor(POS_LOGOUT)));
-        adapter.setListener(this);
-        adapter.setSelected(POS_CART);
-
-        RecyclerView list = findViewById(R.id.list);
-        list.setNestedScrollingEnabled(false);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(adapter);
-    }
-
-    @Override
-    public void onItemSelected(int position) {
-        if (position == POS_LOGOUT) {
-            Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-        }
+        loadUsers(api.readUsers());
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_home, menu);
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
         return true;
     }
 
@@ -193,10 +138,6 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             Refreshing();
-        } else {
-            Intent intent = new Intent(HomeActivity.this, UserActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -226,18 +167,18 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
         recyclerView.scheduleLayoutAnimation();
     }
 
-    private void loadCarts(Call<List<Cart>> query) {
-        query.enqueue(new Callback<List<Cart>>() {
+    private void loadUsers(Call<List<User>> query) {
+        query.enqueue(new Callback<List<User>>() {
             @Override
-            public void onResponse(Call<List<Cart>> call, Response<List<Cart>> response) {
-                List<Cart> carts = response.body();
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                List<User> users = response.body();
 
-                if (carts.size() > 0) {
+                if (users.size() > 0) {
                     recyclerView.setVisibility(View.VISIBLE);
                     emptyTransaksi.pauseAnimation();
                     emptyTransaksi.setVisibility(LottieAnimationView.GONE);
 
-                    adapter = new HomeAdapter(HomeActivity.this, carts);
+                    adapter = new UserAdapter(UserActivity.this, users);
                     recyclerView.setAdapter(adapter);
                     runLayoutAnimation(recyclerView);
 
@@ -263,7 +204,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
             }
 
             @Override
-            public void onFailure(Call<List<Cart>> call, Throwable t) {
+            public void onFailure(Call<List<User>> call, Throwable t) {
                 recyclerView.setVisibility(View.GONE);
 
                 emptyTransaksi.setAnimation(R.raw.nointernet);
@@ -278,40 +219,9 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 loadingProgress.pauseAnimation();
                 loadingProgress.setVisibility(LottieAnimationView.GONE);
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                Toast.makeText(HomeActivity.this, "Gagal koneksi sistem, silahkan coba lagi...", Toast.LENGTH_LONG).show();
+                Toast.makeText(UserActivity.this, "Gagal koneksi sistem, silahkan coba lagi...", Toast.LENGTH_LONG).show();
                 Log.e("DEBUG", "Error: ", t);
             }
         });
-    }
-
-    @SuppressWarnings("rawtypes")
-    private DrawerItem createItemFor(int position) {
-        return new SimpleItem(screenIcons[position], screenTitles[position])
-                .withIconTint(color(R.color.grey300))
-                .withTextTint(color(R.color.grey300))
-                .withSelectedIconTint(color(R.color.red500))
-                .withSelectedTextTint(color(R.color.red500));
-    }
-
-    private String[] loadScreenTitles() {
-        return getResources().getStringArray(R.array.sideNavTitles);
-    }
-
-    private Drawable[] loadScreenIcons() {
-        TypedArray ta = getResources().obtainTypedArray(R.array.sideNavIcons);
-        Drawable[] icons = new Drawable[ta.length()];
-        for (int i = 0; i < ta.length(); i++) {
-            int id = ta.getResourceId(i, 0);
-            if (id != 0) {
-                icons[i] = ContextCompat.getDrawable(this, id);
-            }
-        }
-        ta.recycle();
-        return icons;
-    }
-
-    @ColorInt
-    private int color(@ColorRes int res) {
-        return ContextCompat.getColor(this, res);
     }
 }

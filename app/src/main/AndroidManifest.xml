@@ -28,6 +28,7 @@
         <!--Main-->
         <activity android:name="com.merkle.UI.Main.HomeActivity" />
         <activity android:name="com.merkle.UI.Main.DetailActivity" />
+        <activity android:name="com.merkle.UI.Main.UserActivity" />
 
     </application>
 </manifest>
