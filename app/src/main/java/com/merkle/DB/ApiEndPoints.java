@@ -1,7 +1,6 @@
 package com.merkle.DB;
 
 import com.merkle.Data.Model.Carts.Cart;
-import com.merkle.Data.Model.Job;
 import com.merkle.Data.Model.Users.User;
 
 import java.util.List;
@@ -26,12 +25,6 @@ public interface ApiEndPoints {
     @GET("carts")
     Call<List<Cart>> readCarts();
 
-    @GET("positions.json")
-    Call<List<Job>> readJobs();
-
     @GET
-    Call<List<Job>> searchJob(@Url String url);
-
-    @GET
-    Call<Job> readDetail(@Url String url);
+    Call<Cart> readSingleCart(@Url String url);
 }

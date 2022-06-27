@@ -1,16 +1,17 @@
 package com.merkle.UI.Main;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -19,13 +20,16 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.github.captain_miao.optroundcardview.OptRoundCardView;
 import com.merkle.DB.ApiEndPoints;
 import com.merkle.Data.Helper.Utils;
-import com.merkle.Data.Model.Job;
+import com.merkle.Data.Model.Carts.Cart;
 import com.merkle.R;
 
 import retrofit2.Call;
@@ -38,6 +42,8 @@ import static com.merkle.DB.baseURL.url;
 
 public class DetailActivity extends AppCompatActivity {
     private ApiEndPoints api;
+    private DetailAdapter adapter;
+    private RecyclerView recyclerView;
     private ConstraintLayout constraintLayout;
     private SwipeRefreshLayout swipeRefreshLayout;
     private LottieAnimationView emptyTransaksi, loadingProgress;
@@ -54,6 +60,11 @@ public class DetailActivity extends AppCompatActivity {
         loadingProgress = findViewById(R.id.loadingProgress);
         constraintLayout = findViewById(R.id.constraintLayout);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+
+        recyclerView = findViewById(R.id.recycler);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(url)
@@ -96,30 +107,42 @@ public class DetailActivity extends AppCompatActivity {
         loadingProgress.playAnimation();
         loadingProgress.setVisibility(LottieAnimationView.VISIBLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        loadJob();
+        loadCart();
     }
 
     public void Refreshing() {
         swipeRefreshLayout.setRefreshing(true);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        loadJob();
+        loadCart();
     }
 
-    private void loadJob() {
-        Call<Job> call = api.readDetail(url + "positions/" + getIntent().getStringExtra("id"));
-        call.enqueue(new Callback<Job>() {
-            @Override
-            public void onResponse(Call<Job> call, Response<Job> response) {
-                Job job = response.body();
+    private void runLayoutAnimation(final RecyclerView recyclerView) {
+        Context context = recyclerView.getContext();
+        LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_from_bottom);
 
-                if (job != null) {
+        recyclerView.setLayoutAnimation(controller);
+        recyclerView.scheduleLayoutAnimation();
+    }
+
+    private void loadCart() {
+        Call<Cart> call = api.readSingleCart(url + "carts/" + getIntent().getIntExtra("id", 0));
+        call.enqueue(new Callback<Cart>() {
+            @Override
+            public void onResponse(Call<Cart> call, Response<Cart> response) {
+                Cart carts = response.body();
+
+                if (carts != null) {
                     constraintLayout.setVisibility(View.VISIBLE);
                     emptyTransaksi.pauseAnimation();
                     emptyTransaksi.setVisibility(LottieAnimationView.GONE);
 
-                    ((TextView) findViewById(R.id.id)).setText("ID: #" + job.getId());
-                    ((TextView) findViewById(R.id.title)).setText(job.getTitle());
-                    ((TextView) findViewById(R.id.type)).setText(job.getType());
+                    ((TextView) findViewById(R.id.id)).setText("ID #" + carts.getId());
+                    ((TextView) findViewById(R.id.userId)).setText("#" + carts.getUserId());
+                    ((TextView) findViewById(R.id.date)).setText("#" + carts.getDate());
+
+                    adapter = new DetailAdapter(DetailActivity.this, carts.getProducts());
+                    recyclerView.setAdapter(adapter);
+                    runLayoutAnimation(recyclerView);
 
                 } else {
                     constraintLayout.setVisibility(View.GONE);
@@ -143,7 +166,7 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<Job> call, Throwable t) {
+            public void onFailure(Call<Cart> call, Throwable t) {
                 constraintLayout.setVisibility(View.GONE);
 
                 emptyTransaksi.setAnimation(R.raw.nointernet);

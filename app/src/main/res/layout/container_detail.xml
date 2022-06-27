@@ -7,7 +7,7 @@
     android:overScrollMode="never">
 
     <TextView
-        android:id="@+id/header2"
+        android:id="@+id/productId"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -15,7 +15,7 @@
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/inter_bold"
         android:maxEms="12"
-        android:text="ProductId:"
+        android:text=""
         android:textColor="@color/grey400"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,7 +23,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/type"
+        android:id="@+id/quantity"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -31,12 +31,11 @@
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/inter_bold"
         android:maxEms="12"
-        android:paddingBottom="16dp"
-        android:text="Quantity:"
+        android:text=""
         android:textColor="@color/red500"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/header2" />
+        app:layout_constraintTop_toBottomOf="@+id/productId" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

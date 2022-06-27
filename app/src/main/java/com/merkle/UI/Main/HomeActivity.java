@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -24,7 +23,6 @@ import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -58,8 +56,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import static com.merkle.DB.baseURL.url;
 
 public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnItemSelectedListener {
-    private static final int POS_DASHBOARD = 0;
-    private static final int POS_LOGOUT = 1;
+    private static final int POS_CART = 0;
+    private static final int POS_USERS = 1;
+    private static final int POS_LOGOUT = 2;
 
     private ApiEndPoints api;
     private HomeAdapter adapter;
@@ -164,10 +163,11 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
         screenTitles = loadScreenTitles();
 
         DrawerAdapter adapter = new DrawerAdapter(Arrays.asList(
-                createItemFor(POS_DASHBOARD).setChecked(true),
+                createItemFor(POS_CART).setChecked(true),
+                createItemFor(POS_USERS),
                 createItemFor(POS_LOGOUT)));
         adapter.setListener(this);
-        adapter.setSelected(POS_DASHBOARD);
+        adapter.setSelected(POS_CART);
 
         RecyclerView list = findViewById(R.id.list);
         list.setNestedScrollingEnabled(false);
